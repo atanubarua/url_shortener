@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Url;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -47,7 +48,7 @@ class ShortenController extends Controller
                 'user_id' => auth()->id(),
             ]);
 
-            $code = $urlObj->generateCodee($url->id);
+            $code = $urlObj->generateCode($url->id);
             $url->update(['code' => $code]);
 
             DB::commit();
@@ -68,5 +69,16 @@ class ShortenController extends Controller
                 'message' => 'Something went wrong'
             ]);
         }
+    }
+
+    public function redirect($code)
+    {
+        $longUrl = (new Url())->getLongUrlByCode($code);
+
+        if (empty($longUrl)) {
+            abort(404, 'Url not found');
+        }
+
+        return redirect()->away($longUrl, 301);
     }
 }

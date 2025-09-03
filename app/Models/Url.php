@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class Url extends Model
 {
@@ -55,5 +57,13 @@ class Url extends Model
         }
 
         return $code;
+    }
+
+    public function getLongUrlByCode(string $code) {
+        Log::info('CACHE_CHECK');
+        return Cache::remember("short_url:{$code}", now()->addHours(1), function() use ($code) {
+            $url = self::query()->where('code', $code)->first();
+            return $url->long_url ?? null;
+        });
     }
 }
